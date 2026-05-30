@@ -1,3 +1,3 @@
 # Take a Stemstic
 
-Steam analytics project built with FastAPI + React.
+A project for obtaining various statistics from the Steam library
