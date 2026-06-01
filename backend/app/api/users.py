@@ -43,3 +43,16 @@ def update_user_by_id(user_id: int, user_data: UserUpdate):
         detail="Пользователь не найден"
         )
     return user
+
+@router.post("/users/from-steam/{steam_id}")
+def create_user_from_steam(steam_id: int):
+    user = user_service.create_user_from_steam(steam_id)
+
+    if user is None:
+        raise HTTPException(
+        status_code=409,
+        detail="Пользователь с таким Steam ID уже существует"
+    )
+
+    return user
+    
