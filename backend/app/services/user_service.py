@@ -2,6 +2,8 @@ from app.core.database import SessionLocal
 from app.models.user import User
 from app.services import steam_service
 from app.models.user_statistics import UserStatistics
+from app.models.game import Game
+from app.models.user_game import UserGame
 
 
 def get_users():
@@ -107,3 +109,54 @@ def save_user_statistics(steam_id: int):
 
     return user_statistics
 
+def save_user_games(steam_id: int):
+    db = SessionLocal()
+
+    games = steam_service.get_owned_games(steam_id)
+
+    saved_games = []
+
+    for game_data in games:
+        steam_app_id = game_data["appid"]
+        name = game_data["name"]
+        hours = round(game_data["playtime_forever"] / 60, 1)
+
+        game = db.query(Game).filter(Game.steam_app_id == steam_app_id).first()
+
+        if game is None:
+            game = Game(
+                steam_app_id=steam_app_id,
+                name=name
+            )
+
+            db.add(game)
+
+        existing_user_game = db.query(UserGame).filter(
+            UserGame.steam_id == str(steam_id),
+            UserGame.steam_app_id == steam_app_id
+        ).first()
+
+        if existing_user_game:
+            existing_user_game.hours = hours
+        else:
+            user_game = UserGame(
+                steam_id=str(steam_id),
+                steam_app_id=steam_app_id,
+                hours=hours
+            )
+
+            db.add(user_game)
+
+        saved_games.append({
+            "name": name,
+            "hours": hours
+        })
+
+    db.commit()
+    db.close()
+
+    return {
+        "steam_id": steam_id,
+        "saved_games_count": len(saved_games),
+        "saved_games": saved_games
+    }

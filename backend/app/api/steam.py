@@ -20,3 +20,7 @@ def get_steam_statistics(steam_id: int):
 @router.post("/steam/statistics/save/{steam_id}")
 def save_steam_statistics(steam_id: int):
     return user_service.save_user_statistics(steam_id)
+
+@router.post("/steam/games/save/{steam_id}")
+def save_steam_games(steam_id: int):
+    return user_service.save_user_games(steam_id)
