@@ -160,3 +160,58 @@ def save_user_games(steam_id: int):
         "saved_games_count": len(saved_games),
         "saved_games": saved_games
     }
+
+
+def get_user_statistics(steam_id: int):
+    db = SessionLocal()
+    statistics = db.query(UserStatistics).filter(UserStatistics.steam_id == str(steam_id)).first()
+    db.close()
+    return statistics
+
+def get_user_games(steam_id: int):
+    db = SessionLocal()
+
+    user_games = db.query(UserGame).filter(
+        UserGame.steam_id == str(steam_id)
+    ).all()
+
+    result = []
+
+    for user_game in user_games:
+        game = db.query(Game).filter(
+            Game.steam_app_id == user_game.steam_app_id
+        ).first()
+
+        result.append({
+            "steam_app_id": user_game.steam_app_id,
+            "name": game.name if game else "Unknown game",
+            "hours": user_game.hours
+        })
+
+    db.close()
+
+    return result
+
+def sync_user_data(steam_id: int):
+    db = SessionLocal()
+
+    existing_user = db.query(User).filter(
+        User.steam_id == str(steam_id)
+    ).first()
+
+    db.close()
+
+    if existing_user is None:
+        user = create_user_from_steam(steam_id)
+    else:
+        user = existing_user
+
+    statistics = save_user_statistics(steam_id)
+    games = save_user_games(steam_id)
+
+    return {
+        "message": "Синхронизация завершена",
+        "user": user,
+        "statistics": statistics,
+        "games_saved": games["saved_games_count"]
+    }

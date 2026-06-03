@@ -24,3 +24,31 @@ def save_steam_statistics(steam_id: int):
 @router.post("/steam/games/save/{steam_id}")
 def save_steam_games(steam_id: int):
     return user_service.save_user_games(steam_id)
+
+@router.get("/statistics/{steam_id}")
+def get_statistics(steam_id: int):
+    statistics = user_service.get_user_statistics(steam_id)
+
+    if statistics is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Статистика не найдена"
+        )
+
+    return statistics
+
+@router.get("/games/{steam_id}")
+def get_user_games(steam_id: int):
+    games = user_service.get_user_games(steam_id)
+
+    if not games:
+        raise HTTPException(
+            status_code=404,
+            detail="Игры пользователя не найдены"
+        )
+
+    return games
+
+@router.post("/sync/{steam_id}")
+def sync_user_data(steam_id: int):
+    return user_service.sync_user_data(steam_id)
