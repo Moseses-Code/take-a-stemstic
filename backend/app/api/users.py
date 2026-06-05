@@ -56,3 +56,14 @@ def create_user_from_steam(steam_id: int):
 
     return user
     
+@router.get("/users/steam/{steam_id}")
+def get_user_by_steam_id(steam_id: int):
+    user = user_service.get_user_by_steam_id(steam_id)
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Пользователь не найден"
+        )
+
+    return user   

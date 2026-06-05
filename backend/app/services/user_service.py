@@ -67,11 +67,13 @@ def create_user_from_steam(steam_id: int):
         db.close()
         return None
     steam_user = steam_service.get_player_summary(steam_id)
+    steam_level = steam_service.get_steam_level(steam_id)
 
     user = User(
-        steam_id=steam_user["steam_id"],
-        nickname=steam_user["nickname"],
-        avatar_url=steam_user["avatar_url"]
+    steam_id=steam_user["steam_id"],
+    nickname=steam_user["nickname"],
+    avatar_url=steam_user["avatar_url"],
+    steam_level=steam_level
     )
 
     db.add(user)
@@ -85,24 +87,42 @@ def save_user_statistics(steam_id: int):
     db = SessionLocal()
 
     statistics = steam_service.get_games_statistics(steam_id)
-
     favorite_game = statistics["favorite_game"]
 
-    user_statistics = UserStatistics(
-        steam_id=str(steam_id),
-        total_games=statistics["total_games"],
-        total_hours=statistics["total_hours"],
-        average_hours_per_game=statistics["average_hours_per_game"],
-        played_games=statistics["played_games"],
-        played_percent=statistics["played_percent"],
-        never_played_count=statistics["never_played_count"],
-        low_playtime_count=statistics["low_playtime_count"],
-        backlog_count=statistics["backlog_count"],
-        favorite_game_name=favorite_game["name"] if favorite_game else None,
-        favorite_game_hours=favorite_game["hours"] if favorite_game else None
+    user_statistics = db.query(UserStatistics).filter(
+        UserStatistics.steam_id == str(steam_id)
+    ).first()
+
+    if user_statistics is None:
+        user_statistics = UserStatistics(
+            steam_id=str(steam_id)
+        )
+
+        db.add(user_statistics)
+
+    user_statistics.total_games = statistics["total_games"]
+    user_statistics.total_hours = statistics["total_hours"]
+    user_statistics.average_hours_per_game = statistics["average_hours_per_game"]
+
+    user_statistics.played_games = statistics["played_games"]
+    user_statistics.played_percent = statistics["played_percent"]
+
+    user_statistics.never_played_count = statistics["never_played_count"]
+    user_statistics.low_playtime_count = statistics["low_playtime_count"]
+    user_statistics.backlog_count = statistics["backlog_count"]
+
+    user_statistics.favorite_game_name = (
+        favorite_game["name"] if favorite_game else None
     )
 
-    db.add(user_statistics)
+    user_statistics.favorite_game_hours = (
+        favorite_game["hours"] if favorite_game else None
+    )
+
+    user_statistics.favorite_game_appid = (
+        favorite_game["steam_app_id"] if favorite_game else None
+    )
+
     db.commit()
     db.refresh(user_statistics)
     db.close()
@@ -195,16 +215,30 @@ def get_user_games(steam_id: int):
 def sync_user_data(steam_id: int):
     db = SessionLocal()
 
-    existing_user = db.query(User).filter(
+    steam_user = steam_service.get_player_summary(steam_id)
+    steam_level = steam_service.get_steam_level(steam_id)
+
+    user = db.query(User).filter(
         User.steam_id == str(steam_id)
     ).first()
 
-    db.close()
+    if user is None:
+        user = User(
+            steam_id=steam_user["steam_id"],
+            nickname=steam_user["nickname"],
+            avatar_url=steam_user["avatar_url"],
+            steam_level=steam_level
+        )
 
-    if existing_user is None:
-        user = create_user_from_steam(steam_id)
+        db.add(user)
     else:
-        user = existing_user
+        user.nickname = steam_user["nickname"]
+        user.avatar_url = steam_user["avatar_url"]
+        user.steam_level = steam_level
+
+    db.commit()
+    db.refresh(user)
+    db.close()
 
     statistics = save_user_statistics(steam_id)
     games = save_user_games(steam_id)
@@ -215,3 +249,13 @@ def sync_user_data(steam_id: int):
         "statistics": statistics,
         "games_saved": games["saved_games_count"]
     }
+def get_user_by_steam_id(steam_id: int):
+    db = SessionLocal()
+
+    user = db.query(User).filter(
+        User.steam_id == str(steam_id)
+    ).first()
+
+    db.close()
+
+    return user

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.services import steam_service
 from app.services import user_service
+from fastapi import HTTPException
 
 router = APIRouter()
 

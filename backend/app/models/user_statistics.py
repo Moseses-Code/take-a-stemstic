@@ -22,3 +22,4 @@ class UserStatistics(Base):
 
     favorite_game_name = Column(String)
     favorite_game_hours = Column(Float)
+    favorite_game_appid = Column(Integer)

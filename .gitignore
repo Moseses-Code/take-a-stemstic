@@ -4,3 +4,4 @@ backend/app/**/__pycache__/
 *.pyc
 backend/steamstats.db
 .vscode/
+backend/.env

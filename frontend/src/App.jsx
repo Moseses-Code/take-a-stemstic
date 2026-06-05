@@ -1,6 +1,31 @@
+import { Link, Route, Routes } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
 import "./App.css";
 
-function App() {
+function Landing() {
+  function handlePreviewMove(event) {
+    const card = event.currentTarget;
+    const rect = card.getBoundingClientRect();
+
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -8;
+    const rotateY = ((x - centerX) / centerX) * 8;
+
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+  }
+
+  function handlePreviewLeave(event) {
+    const card = event.currentTarget;
+
+    card.style.transform =
+      "perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)";
+  }
+
   return (
     <main className="page">
       <header className="header">
@@ -13,7 +38,9 @@ function App() {
           <a>FAQ</a>
         </nav>
 
-        <button className="steam-button">Войти через Steam</button>
+        <Link to="/dashboard" className="steam-button">
+          Войти через Steam
+        </Link>
       </header>
 
       <section className="hero">
@@ -29,21 +56,62 @@ function App() {
             сколько ты играешь, во что играешь и сколько всего ещё впереди.
           </p>
 
-          <button className="main-button">Войти через Steam</button>
+          <Link to="/dashboard" className="main-button">
+            Войти через Steam
+          </Link>
 
           <small>🔒 Мы не получаем доступ к вашему паролю.</small>
         </div>
 
-        <div className="preview-placeholder">
+        <div
+          className="preview-placeholder"
+          onMouseMove={handlePreviewMove}
+          onMouseLeave={handlePreviewLeave}
+        >
           <div className="placeholder-content">
-            <h2>Профиль пользователя</h2>
+            <div className="preview-window">
+              <div className="preview-window-header">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+
+              <div className="preview-skeleton">
+                <div className="skeleton-avatar"></div>
+
+                <div className="skeleton-lines">
+                  <div></div>
+                  <div></div>
+                </div>
+              </div>
+
+              <div className="skeleton-grid">
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+
+            <span className="preview-text">
+              Ваш профиль Steam появится здесь
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section className="ad-section">
+        <div className="ad-banner">
+          <div className="ad-label">Реклама</div>
+
+          <div className="ad-content">
+            <h3>Здесь может быть ваш баннер</h3>
 
             <p>
-              Здесь будет интерактивный скриншот профиля пользователя после
-              завершения разработки панели управления.
+              Поддержите развитие Take-a-Steamstic и расскажите о своём продукте
+              тысячам игроков Steam.
             </p>
 
-            <span>PREVIEW COMING SOON</span>
+            <button>Подробнее</button>
           </div>
         </div>
       </section>
@@ -88,6 +156,15 @@ function Feature({ icon, title, text }) {
       <h3>{title}</h3>
       <p>{text}</p>
     </article>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   );
 }
 

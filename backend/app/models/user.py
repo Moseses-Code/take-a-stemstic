@@ -9,3 +9,4 @@ class User(Base):
     steam_id = Column(String, unique=True, index=True)
     nickname = Column(String)
     avatar_url = Column(String)
+    steam_level = Column(Integer, default=0)
